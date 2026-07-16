@@ -1,4 +1,6 @@
 import torch
+import torch.nn as nn
+from torch.nn import functional as F
 
 
 def main():
@@ -74,13 +76,13 @@ def main():
         return x, y
 
     xb, yb = get_batch("train")
-    print("inputs:")
-    print(xb.shape)
-    print("targets:")
-    print(yb.shape)
-    print(yb)
+    # print("inputs:")
+    # print(xb.shape)
+    # print("targets:")
+    # print(yb.shape)
+    # print(yb)
 
-    print('------------------------------')
+    # print('------------------------------')
     
     for b in range(batch_size): # batch Dimension
         for t in range(block_size): # time dimension 
@@ -90,6 +92,58 @@ def main():
     
     
 
+    #BigramLanguage Model (the basic Neural Network) and feeding the most basic Neural Network
+    
+    # This neural network is nothing but just predicts the next token based on the current token and append the next token to the previous one (so like if we are printing hello then it is like Predict the next character based on h => e -> he => l -> hel => l -> hell => o -> hello and so on)
+    
+    class BigramLanguageModel(nn.Module):
 
+        def __init__(self, vocab_size):
+            super().__init__()
+        # each token directly reads off the logits for the next token from a lookup table
+            self.token_embedding_table = nn.Embedding(vocab_size, vocab_size)  #Creating a token_embedding_table of size (vocab_size * vocab_size)
+
+        def forward(self, index, targets=None):
+            # index and targets are both(B, T) tensor of integers -: (B,T)=> Batch, Time
+            
+            logits = self.token_embedding_table(index) # Response in (B,T,C) tensors (Batch, Time, channel) where batch is 4 (batch_size), Time is 8 (block_size), Channel is (vocab_size i.e. 65)
+
+            if targets is None:
+                loss = None
+            else:
+                
+                #Now since the Tensor's cross entropy loss expects the Channel as a second argument but we have it in 3rd one so mixing B and T will leave the C at 2nd position 
+                B,T,C = logits.shape
+                logits = logits.view(B*T, C)
+    
+                targets = targets.view(B*T)
+    
+                loss = F.cross_entropy(logits, targets)
+            return logits, loss
+
+        def generate(self, index, max_new_token):
+            # index is (B,T) array of indices in current Context
+            for _ in range(max_new_token):
+                #get the prediction
+                logits, loss = self(index)
+                #focus only on the last time step 
+                logits = logits[:,-1,:] # become (B,C)
+                # apply softmax to get probablities
+                probs = F.softmax(logits, dim=1) #(B,C)
+                # sample from distribution
+                index_next = torch.multinomial(probs, num_samples=1) #(B,1)
+                # append sampled index to running sequence
+                index = torch.cat((index, index_next), dim=1) #(B, T+1)
+
+            return index
+                
+    m = BigramLanguageModel(vocab_size)
+    logit, loss = m(xb, yb)
+    # logit = m(xb, yb)
+    print("logits", logit.shape)
+    print("loss", loss)
+
+    print(decode(m.generate(index = torch.zeros((1,1), dtype=torch.long), max_new_token=100)[0].tolist()))
+    
 if __name__ == "__main__":
     main()
