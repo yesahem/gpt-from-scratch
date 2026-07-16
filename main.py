@@ -164,7 +164,7 @@ def main():
         optimizer.step()
 
     print(loss.item())
-    print(decode(m.generate(index = torch.zeros((1,1), dtype=torch.long), max_new_token=10000)[0].tolist()))
+    print(decode(m.generate(index = torch.zeros((1,1), dtype=torch.long), max_new_token=200)[0].tolist()))
 
     
 if __name__ == "__main__":
