@@ -8,7 +8,7 @@ def main():
     #  
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu") # Metal Performance Shaders (MPS)
     
-    print(f"Using device: {device}")
+    # print(f"Using device: {device}")
 
     # Main code 
     with open("input.txt", "r", encoding="utf-8") as f:
@@ -19,8 +19,8 @@ def main():
     # getting all the unique characters from the text
     chars = sorted(list(set(text)))
     vocab_size = len(chars)
-    print("".join(chars))
-    print(vocab_size)
+    # print("".join(chars))
+    # print(vocab_size)
 
     ## Creating a mapping from characters to integers and vice versa
     string_to_integer = {ch: i for i, ch in enumerate(chars)}
@@ -38,7 +38,7 @@ def main():
 
     ## Converting the data into tensors
     data = torch.tensor(encode(text), dtype=torch.long)
-    print(data.shape, data.dtype)
+    # print(data.shape, data.dtype)
     # print("len data", len(data))
 
     ## Now spliting the data into two parts -> 1. Training data (around 90% of the dataset),
@@ -59,7 +59,7 @@ def main():
     for t in range(block_size):
         context = x[:t+1]
         target = y[t]
-        print(f"when input is {context} the target is: {target} ")
+        # print(f"when input is {context} the target is: {target} ")
 
 
     # Introducing Batching for efficient processing on gpu efficiently 
@@ -88,7 +88,7 @@ def main():
         for t in range(block_size): # time dimension 
          context = xb[b, :t+1]
          target = yb[b, t]
-         print(f"when input is {context.tolist()} the target is: {target} ")
+         # print(f"when input is {context.tolist()} the target is: {target} ")
     
     
 
@@ -140,10 +140,32 @@ def main():
     m = BigramLanguageModel(vocab_size)
     logit, loss = m(xb, yb)
     # logit = m(xb, yb)
-    print("logits", logit.shape)
-    print("loss", loss)
+    # print("logits", logit.shape)
+    # print("loss", loss)
 
-    print(decode(m.generate(index = torch.zeros((1,1), dtype=torch.long), max_new_token=100)[0].tolist()))
+    # print(decode(m.generate(index = torch.zeros((1,1), dtype=torch.long), max_new_token=100)[0].tolist()))
+
+
+    ## Training The models 
+
+    # Creating a PyTorch optimizer 
+    optimizer = torch.optim.AdamW(m.parameters(), lr=1e-3)
+
+    # updating the batch size to fit more 
+    batch_size = 32
+    for _ in range(10000):
+        # sample the batch of data
+        xb, yb = get_batch('train')
+
+        #evaluate the loss
+        logits, loss = m(xb,yb)
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        optimizer.step()
+
+    print(loss.item())
+    print(decode(m.generate(index = torch.zeros((1,1), dtype=torch.long), max_new_token=10000)[0].tolist()))
+
     
 if __name__ == "__main__":
     main()
