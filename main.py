@@ -73,6 +73,7 @@ def main():
         inputx = torch.randint(len(data)-block_size, (batch_size,))
         x = torch.stack([data[i:i+block_size] for i in inputx])
         y = torch.stack([data[i+1: i+block_size+1] for i in inputx])
+        x,y = x.to(device), y.to(device)
         return x, y
 
     xb, yb = get_batch("train")
@@ -137,7 +138,8 @@ def main():
 
             return index
                 
-    m = BigramLanguageModel(vocab_size)
+    model = BigramLanguageModel(vocab_size)
+    m = model.to(device)
     logit, loss = m(xb, yb)
     # logit = m(xb, yb)
     # print("logits", logit.shape)
@@ -153,7 +155,7 @@ def main():
 
     # updating the batch size to fit more 
     batch_size = 32
-    for _ in range(10000):
+    for _ in range(100000):
         # sample the batch of data
         xb, yb = get_batch('train')
 
@@ -164,7 +166,9 @@ def main():
         optimizer.step()
 
     print(loss.item())
-    print(decode(m.generate(index = torch.zeros((1,1), dtype=torch.long), max_new_token=200)[0].tolist()))
+
+    # Generate from the model 
+    print(decode(m.generate(index = torch.zeros((1,1), dtype=torch.long, device=device), max_new_token=200)[0].tolist()))
 
     
 if __name__ == "__main__":
