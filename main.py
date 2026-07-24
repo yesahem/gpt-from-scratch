@@ -10,7 +10,7 @@ def main():
     
     # print(f"Using device: {device}")
 
-    # Main code 
+    # Reading the DataSet
     with open("input.txt", "r", encoding="utf-8") as f:
         text = f.read()
 
@@ -26,13 +26,22 @@ def main():
     string_to_integer = {ch: i for i, ch in enumerate(chars)}
     integer_to_string = {i: ch for i, ch in enumerate(chars)}
 
-    encode = lambda s: [
-        string_to_integer[character] for character in s
-    ]  # encode: take a string as input and output a list of integer
-    decode = lambda l: "".join(
-        [integer_to_string[integer] for integer in l]
-    )  # decode : take a list of integer as input and output a string
+    # encode = lambda s: [
+    #     string_to_integer[character] for character in s
+    # ]  # encode: take a string as input and output a list of integer
+    
+    # decode = lambda l: "".join(
+    #     [integer_to_string[integer] for integer in l]
+    # )  # decode : take a list of integer as input and output a string
 
+    def encode(s): 
+        return [string_to_integer[character] for character in s
+    ]
+
+    def decode(l): 
+        return "".join(
+            [integer_to_string[integer] for integer in l]
+        )
     # print(encode("shishu"))
     #    print(decode(encode("shishu")))
 
